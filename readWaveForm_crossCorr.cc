@@ -76,6 +76,7 @@ int Corr(int target, char* path, char* filename)
 
     while(!infile.eof())
     {
+        infile_ind++;
         for(int j=0; j<12; j++) // read channels data for biniary file , ch 0-11 (12 channels);
         {
             infile.read ( (char *)(&dataBlock), sizeof(dataBlock) ); // read jth channel data
@@ -85,7 +86,6 @@ int Corr(int target, char* path, char* filename)
             //time=dataBlock.globaltime;
             //if ((time>start_time+10*map_ind)&&(time<start_time+10*map_ind+10))
             {
-                infile_ind++;
                 //cout << start_time+20 << endl;
                 //cout << setprecision(14) << dataBlock.globaltime <<endl;
                 for (int k=0; k<length; k++)
@@ -103,7 +103,7 @@ int Corr(int target, char* path, char* filename)
                 for (int k=0; k<length; k++)
                     ch1[j][k]-=average;
                 //plot WaveForm figure to j-th pannels
-                /*gr1[j] = new TGraph(length, t[j], ch1[j]);
+                gr1[j] = new TGraph(length, t[j], ch1[j]);
                 if(j<4)// give labels
                 {
                             sprintf(name,"Global Time: %ld", start_time+20 );//sprintf(name,"GEN141421 ANT%d", j );
@@ -116,7 +116,7 @@ int Corr(int target, char* path, char* filename)
                   gr1[j]->SetLineColor(4);
                   gr1[j]->Draw("AL");
                 }
-                else if (j==8)
+                /*else if (j==8)
                 {
                   gr1[j]->SetLineColor(2);
                   gr1[j]->Draw("L");
@@ -125,18 +125,16 @@ int Corr(int target, char* path, char* filename)
                 {
                   gr1[j]->SetLineColor(4);
                   gr1[j]->Draw("L");
-                }
+                }*/
                 
                 //gr1[j]->GetXaxis()->SetLimits(-1E-6,1E-6 ); //Set the range of X axis
                 
-                c->Update();
-                
-                if(readStart == true)
+                if (readStart == true)
                 { 
                     c->Print(PdfnameBin,"pdf");
                     readStart == false;
                 }
-                */
+                
                 
                 
             }
@@ -164,7 +162,7 @@ int Corr(int target, char* path, char* filename)
             c->cd(2);
             TH1F *h1 = new TH1F("h1","Forward FFT",length/2,1.0e6,500e6);
             for (int i=0;i<length/2;i++)
-                h1->SetBinContent(i,ch1_fftPow[j][i]);
+                h1->SetBinContent(i,ch1_fftMAG[j][i]);
             h1->Draw();
         }
     }
