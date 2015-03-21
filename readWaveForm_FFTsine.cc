@@ -50,6 +50,7 @@ int Corr(int target, char* path, char* filename)
     double map_time[100][length]; //Bin every 10 seconds
     int time, map_ind=0;
     long start_time=20150211084540;
+    float power_timedomain=0, power_freqdomain=0;
 
     TCanvas* c =new TCanvas("WaveForm","data",1600,1200);
     c->Divide(2,2);
@@ -105,6 +106,12 @@ int Corr(int target, char* path, char* filename)
                 //plot WaveForm figure to j-th pannels
                 for (int k=0;k<length;k++)
                   ch1[1][k]=TMath::Sin(k*0.1);
+                if (j==1)
+                {
+                  for (int k=0;k<length;k++)
+                    power_timedomain+=pow(ch1[1][k],2);
+                  cout << "power_timedomain: " << power_timedomain << endl;
+                }
                 gr1[j] = new TGraph(length, t[j], ch1[j]);
                 if(j<4)// give labels
                 {
@@ -155,7 +162,7 @@ int Corr(int target, char* path, char* filename)
         fft_own->GetPointsComplex(ch1_fftRe[j],ch1_fftIm[j]);
         for (int i=0;i<length/2;i++)
         {
-            ch1_fftMAG[j][i]=sqrt(pow(ch1_fftRe[j][i],2)+pow(ch1_fftIm[j][i],2))/length*2;
+            ch1_fftMAG[j][i]=sqrt((pow(ch1_fftRe[j][i],2)+pow(ch1_fftIm[j][i],2))/length*2);
             ch1_fftPow[j][i]=pow(ch1_fftMAG[j][i],2)/50;
             ch1_fftdBm[j][i]=10*TMath::Log10(ch1_fftPow[j][i]);
         }
@@ -166,6 +173,9 @@ int Corr(int target, char* path, char* filename)
             for (int i=0;i<length/2;i++)
                 h1->SetBinContent(i,ch1_fftMAG[j][i]);
             h1->Draw();
+            for (int k=0;k<length/2; k++)
+                power_freqdomain+=pow(ch1_fftMAG[1][k],2);
+            cout << "power_freqdomain: " << power_freqdomain << endl;
         }
     }
     c->Update();
