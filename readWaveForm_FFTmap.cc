@@ -97,7 +97,7 @@ int FFTmap(char* path)
             infile.close();
             if (FileNames[++FileInd]==0)
                 break;
-            sprintf(char_date,"%sr24_%d.bin", path, FileNames[FileInd]);
+            sprintf(char_date,"%sr49_%d.bin", path, FileNames[FileInd]);
             cout <<"opening file: " <<char_date <<endl; // show the name of data
             infile.open (char_date, ios::in | ios::binary);
             if (infile.good()==false)
