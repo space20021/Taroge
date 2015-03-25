@@ -45,7 +45,7 @@ long TimeAdd(long time_now, int inc)
 //int Corr(int target, char* path, char* filename)
 int FFTmap(char* path)
 {
-    TFile *f = new TFile("test.root","UPDATE");
+    TFile *f = new TFile("test2.root","UPDATE");
     
     cl_data dataBlock;
     ifstream infile;
@@ -68,15 +68,15 @@ int FFTmap(char* path)
     double corr=0, corr_inc=0, corr_self[12];
     int Nb=0;
     int chk=0;
-    double map_time[2000][length]; //Bin every 10 seconds
-    int num_time[2000], map_ind=0;
-    long start_time=20150228000630, time;
-    int FileNames[100]={151 , 152 , 153 , 154 , 155 , 156 , 157 , 158 , 159 , 160 , 161 , 162 , 163 , 164 , 165 , 166 , 167 , 168 , 169 , 170 , 171 , 172 , 173 , 174 , 175 , 176 , 177 , 178 , 179 , 180 , 181 , 182 , 183 , 184 , 185 , 186 , 187 , 188 , 189 , 190 , 191 , 192 , 193 , 194 , 195 , 196 , 197 , 198 , 199}, FileInd=0;
+    double map_time[5000][length]; //Bin every 10 seconds
+    int num_time[5000], map_ind=0;
+    long start_time=20150323000032, time;
+    int FileNames[500]={45 , 46 , 47 , 48 , 49 , 50 , 51 , 52 , 53 , 54 , 55 , 56 , 57 , 58 , 59 , 60 , 61 , 62 , 63 , 64 , 65 , 66 , 67 , 68 , 69 , 70 , 71 , 72 , 73 , 74 , 75 , 76 , 77 , 78 , 79 , 80 , 81 , 82 , 83 , 84 , 85 , 86 , 87 , 88 , 89 , 90 , 91 , 92 , 93 , 94 , 95 , 96 , 97 , 98 , 99 , 100 , 101 , 102 , 103 , 104 , 105 , 106 , 107 , 108 , 109 , 110 , 111 , 112 , 113 , 114 , 115 , 116 , 117 , 118 , 119 , 120 , 121 , 122 , 123 , 124 , 125 , 126 , 127 , 128 , 129 , 130 , 131 , 132 , 133 , 134 , 135}, FileInd=0;
 
     TCanvas* c =new TCanvas("WaveForm","data",1600,1200);
     c->Divide(2,2);
 
-    sprintf(char_date,"%sr24_%d.bin", path, FileNames[FileInd]);
+    sprintf(char_date,"%sr49_%d.bin", path, FileNames[FileInd]);
     cout <<"opening file: " <<char_date <<endl; // show the name of data
     infile.open (char_date, ios::in | ios::binary);// open biniary file
     if (infile.good()==false)
@@ -183,18 +183,18 @@ int FFTmap(char* path)
     h2->Draw();
     
     c->cd(3);
-    TH2F *h3 = new TH2F("h3","Frequency - Time map",length/2,1.0e6,500e6,2000,0,2000);
+    TH2F *h3 = new TH2F("h3","Frequency - Time map",length/2,1.0e6,500e6,5000,0,5000);
     for (int k=0;k<length/2;k++)
     {
-        for (int l=0;l<2000;l++)
+        for (int l=0;l<5000;l++)
             h3->SetBinContent(k,l,map_time[l][k]);
     }
     h3->GetZaxis()->SetRangeUser(-70, -20);
     h3->Draw("colz");
     
     c->cd(4);
-    TH1F *h4 = new TH1F("h4","Number of events in each bin",2000,0,2000);
-    for (int l=0;l<2000;l++)
+    TH1F *h4 = new TH1F("h4","Number of events in each bin",5000,0,5000);
+    for (int l=0;l<5000;l++)
         h4->SetBinContent(l,num_time[l]);
     h4->Draw();
     
