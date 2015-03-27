@@ -200,7 +200,7 @@ int FFTmap(char* path)
     
     c->Update();
     
-    c->Write();
+    f->Write();
     
     c->Print(PdfnameEnd,"pdf");
     cout << "+-----------------------------+" << endl;

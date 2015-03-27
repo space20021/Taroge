@@ -38,7 +38,7 @@ int Corr(int target, char* path, char* filename)
     const int length = 1000;
     int infile_ind = 0;
     double ch1[12][length], t[12][length], grid[10000], ch1_grid[12][10000];
-    double average=0;
+    double average=0, peak=0, rms=0;
     double ch1_fftRe[12][length], ch1_fftIm[12][length], ch1_fftMAG[12][length];
     double ch1_fftPow[12][length], ch1_fftdBm[12][length], ch1_fftBack[12][length], ch1_fftBuf1[length], thres;
     int sort_ind[length];
@@ -50,11 +50,12 @@ int Corr(int target, char* path, char* filename)
     double map_time[100][length]; //Bin every 10 seconds
     long time, map_ind=0;
     long start_time=20150228010000;
+    float jizz_t[250], jizz_ch1[250];
 
     TCanvas* c =new TCanvas("WaveForm","data",1600,1200);
     c->Divide(2,2);
     c->cd(1);
-    TGraph* gr1[12];
+    TGraph* gr1[12],gr2[12];
 
     sprintf(char_date,"%s%s.bin", path, filename );
 
@@ -72,7 +73,6 @@ int Corr(int target, char* path, char* filename)
     return 0;
     }
     int eventCounter=1;
-
 
     while(!infile.eof())
     {
@@ -104,6 +104,24 @@ int Corr(int target, char* path, char* filename)
                     ch1[j][k]-=average;
                 //plot WaveForm figure to j-th pannels
                 gr1[j] = new TGraph(length, t[j], ch1[j]);
+                
+                //Calculate Peak-to-Average
+                peak=0;
+                for (int k=0;k<length;k++)
+                {
+                    if (ch1[j][k]>peak)
+                        peak=ch1[j][k];
+                }
+                cout << "peak: " << peak << "\n";
+                rms=0;
+                for (int k=0;k<length;k++)
+                    rms+=pow(ch1[j][k],2);
+                rms/=length;
+                cout << "rms: " << rms << "\n";
+                cout << "Peak-to-Average: " << pow(peak,2)/rms << "\n";
+                
+        
+                
                 if(j<4)// give labels
                 {
                             sprintf(name,"Global Time: %ld", time );//sprintf(name,"GEN141421 ANT%d", j );
@@ -115,6 +133,16 @@ int Corr(int target, char* path, char* filename)
                 {
                   gr1[j]->SetLineColor(4);
                   gr1[j]->Draw("AL");
+                  /*
+                  for (int k=50;k<300;k++)
+                  {
+                      jizz_t[k-50]=t[j][k];
+                      jizz_ch1[k-50]=ch1[j][k];
+                  }
+                  
+                  gr2[j] = new TGraph(250,jizz_t,jizz_ch1);
+                  gr2[j]->SetLineColor(2);
+                  gr2[j]->Draw("AL");8/
                 }
                 /*else if (j==8)
                 {
@@ -129,19 +157,12 @@ int Corr(int target, char* path, char* filename)
                 
                 //gr1[j]->GetXaxis()->SetLimits(-1E-6,1E-6 ); //Set the range of X axis
                 
-                if (readStart == true)
-                { 
-                    c->Print(PdfnameBin,"pdf");
-                    readStart == false;
-                }
-                
-                
                 
             }
         }
         
     }
-    
+
     //FFT
     for (int j=0; j<12; j++)
     {
@@ -151,6 +172,7 @@ int Corr(int target, char* path, char* filename)
         fft_own->SetPoints(ch1[j]);
         fft_own->Transform();
         fft_own->GetPointsComplex(ch1_fftRe[j],ch1_fftIm[j]);
+        cout <<"Zzsfzsdf\n"
         for (int i=0;i<length/2;i++)
         {
             ch1_fftMAG[j][i]=sqrt((pow(ch1_fftRe[j][i],2)+pow(ch1_fftIm[j][i],2))/length);
@@ -167,7 +189,7 @@ int Corr(int target, char* path, char* filename)
         }
     }
     c->Update();
-    
+    cout <<"adsfasdf\n"
     //Filter spectrum
     //3/9: Use high-pass filter. Also compare the CW frequencies across all recorded events
     for (int j=0; j<12; j++)
@@ -253,8 +275,6 @@ int Corr(int target, char* path, char* filename)
     }
     corr/=Nb;
     */
-    
-    c->Print(PdfnameEnd,"pdf");
     infile.close();
     cout << "+-----------------------------+" << endl;
     //cout << "| Cross-Correlation = " << corr << " |" << endl;

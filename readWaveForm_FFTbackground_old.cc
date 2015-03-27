@@ -34,7 +34,7 @@ long TimeAdd(long time_now, int inc, int steps)
 
 //int abc(int argc, char* argv[])
 //int Corr(int target, char* path, char* filename)
-int FFTmap(char* path, char* filename)
+int FFTbackground(char* path, char* filename)
 {
     //TFile *f = new TFile("test.root","UPDATE");
     
@@ -48,10 +48,11 @@ int FFTmap(char* path, char* filename)
     char name[80] = "";
     char PdfnameEnd[80] = "";
     char fftname[80]="";
-    const int length = 1000;
+    const int length = 1000, length2 = 250;
     int infile_ind = 0;
     double ch1[12][length], t[12][length], grid[10000], ch1_grid[12][10000];
-    double average=0;
+    double ch2[12][length2];
+    double average=0, peak, rms;
     double ch1_fftRe[12][length], ch1_fftIm[12][length], ch1_fftMAG[12][length];
     double ch1_fftPow[12][length], ch1_fftdBm[12][length], ch1_fftBack[12][length], ch1_fftBuf1[length], thres;
     int sort_ind[length];
@@ -62,7 +63,7 @@ int FFTmap(char* path, char* filename)
     int chk=0;
     double map_time[2000][length]; //Bin every 10 seconds
     int num_time[400], map_ind=0;
-    long start_time=20150211000750, time;
+    long start_time=20150323171540, time;
 
 
     //Read all the response curves
@@ -195,9 +196,16 @@ int FFTmap(char* path, char* filename)
     SLP_inter.SetData(401,SLP[0],SLP[1]);
     
     
+    float total[length];
+    for (int k=0;k<50;k++)
+        total[k]=0;
+    for (int k=50;k<500;k++)
+        total[k] = LNA_inter.Eval(k*1.0e6)+FILTER_inter.Eval(k*1.0e6)+RG316_inter.Eval(k*1.0e6)*12.55+RG400_inter.Eval(k*1.0e6)*1.2+SPLITTER_inter.Eval(k*1.0e6)+SLP_inter.Eval(k*1.0e6)-16.5*pow((k/1.0e3),2);
+
     
     TCanvas* c =new TCanvas("WaveForm","data",1600,1200);
     c->Divide(2,2);
+    c->cd(2);
 
     sprintf(char_date,"%s%s.bin", path, filename );
 
@@ -236,9 +244,9 @@ int FFTmap(char* path, char* filename)
                 if (infile_ind!=0)
                 {
                     //if (map_ind>=100) cout << "ccc" << endl;
-                    for (int k=0;k<length;k++)
+                    for (int k=0;k<length2/2;k++)
                     {
-                        map_time[map_ind][k]=ch1_fftBuf1[k]/infile_ind;
+                        map_time[map_ind][k]=ch1_fftBuf1[k]/infile_ind-total[k*4+2];
                         ch1_fftBuf1[k]=0;
                     }
                 }
@@ -251,7 +259,6 @@ int FFTmap(char* path, char* filename)
                 infile_ind=0;
                 map_ind++;
             }
-            infile_ind++;
             //if (map_ind>=100) cout << "eee" << infile_ind << endl;
             //cout << start_time+20 << endl;
             //cout << setprecision(14) << dataBlock.globaltime <<endl;
@@ -305,39 +312,55 @@ int FFTmap(char* path, char* filename)
             }
             */
             
-            TVirtualFFT *fft_own = TVirtualFFT::FFT(1, &length, "R2C M K");
-            fft_own->SetPoints(ch1[j]);
-            fft_own->Transform();
-            fft_own->GetPointsComplex(ch1_fftRe[j],ch1_fftIm[j]);
-            for (int k=0;k<length/2;k++)
+            //Calculate Peak-to-Average
+            peak=0;
+            for (int k=0;k<length;k++)
             {
-                ch1_fftMAG[j][k]=sqrt((pow(ch1_fftRe[j][k],2)+pow(ch1_fftIm[j][k],2))/length);
-                ch1_fftPow[j][k]=pow(ch1_fftMAG[j][k],2)/50;
-                ch1_fftdBm[j][k]=10*TMath::Log10(ch1_fftPow[j][k]);
-                ch1_fftBuf1[k]+=ch1_fftdBm[j][k];
+                if (ch1[j][k]>peak)
+                    peak=ch1[j][k];
             }
-            delete fft_own;
+            rms=0;
+            for (int k=0;k<length;k++)
+                rms+=pow(ch1[j][k],2);
+            rms/=length;
+            //cout << "Peak-to-Average: " << pow(peak,2)/rms << "\n";
+            
+            if (pow(peak,2)/rms>20)
+            {
+                infile_ind++;
+                for (int k=50;k<300;k++)
+                    ch2[j][k-50]=ch1[j][k];
+                TVirtualFFT *fft_own = TVirtualFFT::FFT(1, &length2, "R2C M K");
+                fft_own->SetPoints(ch2[j]);
+                fft_own->Transform();
+                fft_own->GetPointsComplex(ch1_fftRe[j],ch1_fftIm[j]);
+                for (int k=0;k<length2/2;k++)
+                {
+                    ch1_fftMAG[j][k]=sqrt((pow(ch1_fftRe[j][k],2)+pow(ch1_fftIm[j][k],2))/length2);
+                    ch1_fftPow[j][k]=pow(ch1_fftMAG[j][k],2)/50;
+                    ch1_fftdBm[j][k]=10*TMath::Log10(ch1_fftPow[j][k]);
+                    ch1_fftBuf1[k]+=ch1_fftdBm[j][k];
+                }
+                delete fft_own;
+            }
         }
     }
     
     c->cd(1);
-    TH1F *h1 = new TH1F("h1","10~20 seconds",length/2,1.0e6,500e6);
-    for (int k=0;k<length/2;k++)
-        h1->SetBinContent(k,map_time[1][k]);
+    TH1F *h1 = new TH1F("h1","560~570 seconds",length2/2,1.0e6,500e6);
+    for (int k=0;k<length2/2;k++)
+        h1->SetBinContent(k,map_time[56][k]);
     h1->Draw();
     
     c->cd(2);
-    TH1F *h2 = new TH1F("h2","total system response",451,50e6,500e6);
-    for (int k=50;k<=500;k++)
-    {
-        float total = LNA_inter.Eval(k*1.0e6)+FILTER_inter.Eval(k*1.0e6)+RG316_inter.Eval(k*1.0e6)*12.55+RG400_inter.Eval(k*1.0e6)*1.2+SPLITTER_inter.Eval(k*1.0e6)+SLP_inter.Eval(k*1.0e6)-16.5*pow((k/1.0e3),2);
-        h2->SetBinContent(k,total);
-    }
+    TH1F *h2 = new TH1F("h2","total system response",500,1.0e6,500e6);
+    for (int k=0;k<500;k++)
+        h2->SetBinContent(k,total[k]);
     h2->Draw();
     
     c->cd(3);
-    TH2F *h3 = new TH2F("h3","Frequency - Time map",length/2,1.0e6,500e6,87,0,87);
-    for (int k=0;k<length/2;k++)
+    TH2F *h3 = new TH2F("h3","Frequency - Time map",length2/2,1.0e6,500e6,87,0,87);
+    for (int k=0;k<length2/2;k++)
     {
         for (int l=0;l<87;l++)
             h3->SetBinContent(k,l,map_time[l][k]);
@@ -346,7 +369,7 @@ int FFTmap(char* path, char* filename)
     h3->GetXaxis()->SetTitleSize(0.05);
     h3->GetXaxis()->SetLabelSize(0.05);
     h3->GetYaxis()->SetTitle("Time (bin #)");
-    h3->GetZaxis()->SetRangeUser(-70, -20);
+    h3->GetZaxis()  ->SetRangeUser(-105, -60);
     h3->Draw("colz");
     
     c->cd(4);
