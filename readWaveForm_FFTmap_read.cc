@@ -43,8 +43,17 @@ long TimeAdd(long time_now, int inc)
 
 int Read()
 {
-    TFile f1("test2.root","read");
-    TH2F *h0;
-    TCanvas *c0=(TCanvas*)f1.Get("WaveForm");
-    c0->Draw();
+    const int length=1000;
+    double ch1_fft[length];
+    
+    TFile *f1 = new TFile("/Users/judi/Desktop/Taroge_Root/r49_45.root","read");
+    TTree *t1 = (TTree*)f1->Get("t1");
+    t1->SetBranchAddress("ch1_fft",&ch1_fft);
+    t1->GetEntry(100);
+    TH1F *h1 = new TH1F("h1","ch1_fft",length/2,0.0e6,500.0e6);
+    for (int k=0;k<500;k++)
+        h1->SetBinContent(k,ch1_fft[k]);
+    TCanvas *c1;
+    h1->Draw();
+    //TH1F *h1 = (Th1F*)f1->Get()
 }

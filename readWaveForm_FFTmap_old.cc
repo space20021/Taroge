@@ -62,7 +62,9 @@ int FFTmap(char* path, char* filename)
     int chk=0;
     double map_time[2000][length]; //Bin every 10 seconds
     int num_time[400], map_ind=0;
-    long start_time=20150211000750, time;
+    long start_time=20150211084540, time;
+                  //20150211084540
+                  //20150211000750
 
 
     //Read all the response curves
