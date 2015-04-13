@@ -63,7 +63,7 @@ int FFTbackground(char* path, char* filename)
     int chk=0;
     double map_time[2000][length]; //Bin every 10 seconds
     int num_time[400], map_ind=0;
-    long start_time=20150323171540, time;
+    long start_time=20150328012428, time;
 
 
     //Read all the response curves
@@ -237,7 +237,7 @@ int FFTbackground(char* path, char* filename)
                 continue; //Pick only the horizontally polarized antennae
             //if (infile_ind==target)
             time=dataBlock.globaltime;
-            if (time>TimeAdd(start_time,10,map_ind))
+            if (time>TimeAdd(start_time,60,map_ind))
             {
                 //if (map_ind>=100) cout << "bbb" << map_ind << endl;
                 num_time[map_ind]=infile_ind;
@@ -260,7 +260,7 @@ int FFTbackground(char* path, char* filename)
                 map_ind++;
             }
             //if (map_ind>=100) cout << "eee" << infile_ind << endl;
-            //cout << start_time+20 << endl;
+            //cout << time << endl;
             //cout << setprecision(14) << dataBlock.globaltime <<endl;
             for (int k=0; k<length; k++)
             {
@@ -369,7 +369,7 @@ int FFTbackground(char* path, char* filename)
     h3->GetXaxis()->SetTitleSize(0.05);
     h3->GetXaxis()->SetLabelSize(0.05);
     h3->GetYaxis()->SetTitle("Time (bin #)");
-    h3->GetZaxis()  ->SetRangeUser(-105, -60);
+    h3->GetZaxis()->SetRangeUser(-105, -60);
     h3->Draw("colz");
     
     c->cd(4);

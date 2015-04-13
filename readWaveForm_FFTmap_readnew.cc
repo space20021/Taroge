@@ -59,24 +59,19 @@ int Read()
     int event_pm_143=0, event_pm_tot=0;
     
     TChain* chain = new TChain("t1");
-    for (int i=1840;i<=2264;i++) //1840~2264
+    for (int i=10;i<=59;i++) //10~59
     {
-        sprintf(root_file,"/Users/judi/Desktop/Taroge_Root/r24_%d.root",i);
+        sprintf(root_file,"/Users/judi/Desktop/Taroge_Root/r57_%d.root",i);
         chain->Add(root_file);
     }
-    for (int i=1;i<=155;i++) //1~155
-    {
-        sprintf(root_file,"/Users/judi/Desktop/Taroge_Root/r49_%d.root",i);
-        chain->Add(root_file);
-    }
-    num_tot=chain->GetEntries(); //2795979
+    num_tot=chain->GetEntries(); //250050
     chain->SetBranchAddress("time",&time);
     chain->SetBranchAddress("ch1_fft[1]",&ch1_fft);
     
     TCanvas* c1 = new TCanvas("c1","canvas",1600,1200);
     c1->Divide(1,2);
     c1->cd(1);
-    TH1F* h1 = new TH1F("h1","Event Rate -- Time",561055,1426608381,1427169437);
+    TH1F* h1 = new TH1F("h1","Event Rate -- Time",193678,1427462911,1427656589);
     for (int i=0;i<num_tot;i++)
     {
         chain->GetEntry(i);
@@ -151,7 +146,7 @@ int Read()
 //    gr1->SetMarkerSize(0.08);
     gr1->GetXaxis()->SetTimeDisplay(1);
     gr1->GetXaxis()->SetTimeFormat("%m/%d %H:%M%F1995-01-02 08:00:00");
-    gr1->GetXaxis()->SetLimits(1426608381,1427169437);
+    gr1->GetXaxis()->SetLimits(1427462911,1427656589);
     gr1->GetXaxis()->SetTitle("Date / Time");
     gr1->GetXaxis()->SetLabelSize(0.022);
     gr1->GetYaxis()->SetTitle("Power (dBm)");
@@ -165,6 +160,5 @@ int Read()
     gr2->GetXaxis()->SetTitle("Date / Time");
     gr2->GetXaxis()->SetLabelSize(0.022);
     gr2->Draw("P");
-    c1->Update();
     c1->Update();
 }
