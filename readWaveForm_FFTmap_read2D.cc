@@ -43,11 +43,6 @@ int Read()
         sprintf(root_file,"/Users/judi/Desktop/Taroge_Root/r24_%d.root",i);
         chain->Add(root_file);
     }
-    for (int i=1;i<=135;i++) //1~135
-    {
-        sprintf(root_file,"/Users/judi/Desktop/Taroge_Root/r49_%d.root",i);
-        chain->Add(root_file);
-    }
     num_tot=chain->GetEntries(); //
     chain->SetBranchAddress("time",&time);
     chain->SetBranchAddress("ch1_fft[1]",&ch1_fft);
@@ -91,7 +86,7 @@ int Read()
                 for (int k=0;k<500;k++)
                 {
                     ch1_fft_ave[k]/=event_rate_bin;
-                    h1->SetBinContent(time_ind,k,ch1_fft_ave[k]+30.); //+30 to convert to dBm
+                    h1->SetBinContent(time_ind,k,ch1_fft_ave[k]);
                 }
             }
             time_ind++;
@@ -111,7 +106,7 @@ int Read()
     h1->GetXaxis()->SetLabelSize(0.022);
     h1->GetYaxis()->SetTitle("Frequency (MHz)");
     h1->GetYaxis()->SetRange(100,320);
-    h1->GetZaxis()->SetRangeUser(-75, -25);
+    h1->GetZaxis()->SetRangeUser(-55, -20);
     h1->SetStats(false);
     h1->Draw("colz");
     c1->Update();

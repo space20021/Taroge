@@ -45,8 +45,8 @@ long TimeAdd(long time_now, int inc)
 int Read()
 {
     const int length=1000;
-    double ch1_fft[length], ch1_fft_143[3000000], max_ele, ch1_fft_143_red[1000000];
-    int red_ind=0;
+    double ch1[length], ch1_fft[length], ch1_fft_143[3000000], max_ele, ch1_fft_143_red[1000000], ch1_fft_ave[length];
+    int max_ind, red_ind=0;
     int event_rate[3000000];
     int num_tot;
     char root_file[80] = "";
@@ -58,25 +58,25 @@ int Read()
     int event_am_143=0, event_am_tot=0;
     int event_pm_143=0, event_pm_tot=0;
     
+    for (int k=0;k<length;k++)
+        ch1_fft_ave[k]=0.;
+    
     TChain* chain = new TChain("t1");
     for (int i=1840;i<=2264;i++) //1840~2264
     {
         sprintf(root_file,"/Users/judi/Desktop/Taroge_Root/r24_%d.root",i);
         chain->Add(root_file);
     }
-    for (int i=1;i<=155;i++) //1~155
-    {
-        sprintf(root_file,"/Users/judi/Desktop/Taroge_Root/r49_%d.root",i);
-        chain->Add(root_file);
-    }
     num_tot=chain->GetEntries(); //2795979
     chain->SetBranchAddress("time",&time);
+    chain->SetBranchAddress("ch1[1]",&ch1);
     chain->SetBranchAddress("ch1_fft[1]",&ch1_fft);
     
     TCanvas* c1 = new TCanvas("c1","canvas",1600,1200);
-    c1->Divide(1,2);
+    c1->Divide(2,1);
     c1->cd(1);
-    TH1F* h1 = new TH1F("h1","Event Rate -- Time",561055,1426608381,1427169437);
+    TH1F* h1 = new TH1F("h1","Statistics of the \"maximum voltage\" of each event",60,-3.0,3.0);
+    TH1F* h2 = new TH1F("h2"," ",60,-3.0,3.0);
     for (int i=0;i<num_tot;i++)
     {
         chain->GetEntry(i);
@@ -89,7 +89,16 @@ int Read()
         time=time%100;
         time_raw.Set(115,3,time_mday,time_hour,time_min,time);
         time_sto[i]=time_raw.Convert();
-        h1->Fill(time_sto[i]);
+        max_ele=TMath::Abs(ch1[0]);
+        for (int k=1;k<length;k++)
+        {
+            if (TMath::Abs(ch1[k])>max_ele)
+            {
+                max_ind=k;
+                max_ele=TMath::Abs(ch1[k]);
+            }
+        }
+        h1->Fill(ch1[max_ind]);
         max_ele=ch1_fft[140];
         for (int k=1;k<=5;k++)
         {
@@ -112,6 +121,7 @@ int Read()
             if (chk==1)
             {
                 event_am_143++;
+                h2->Fill(ch1[max_ind]);
                 time_sto_red[red_ind]=time_sto[i];
                 ch1_fft_143_red[red_ind]=max_ele;
                 red_ind++;
@@ -123,10 +133,16 @@ int Read()
             if (chk==1)
             {
                 event_pm_143++;
+                h2->Fill(ch1[max_ind]);
                 time_sto_red[red_ind]=time_sto[i];
                 ch1_fft_143_red[red_ind]=max_ele;
                 red_ind++;
             }
+        }
+        if (chk==0)
+        {
+            for (int k=0;k<length;k++)
+                ch1_fft_ave[k]+=ch1_fft[k];
         }
         if (i%100000==0)
             cout << "Reading the " << i << " th event...\n"; //Just to track progress
@@ -136,14 +152,30 @@ int Read()
     cout << "event_pm_143: " << event_pm_143 << "\n";
     cout << "event_pm_tot: " << event_pm_tot << "\n";
     cout << "num_tot: " << num_tot << "\n";
-    h1->SetMarkerStyle(24);
-    h1->SetMarkerColorAlpha(1,0.004);
-    h1->GetXaxis()->SetTimeDisplay(1);
-    h1->GetXaxis()->SetTimeFormat("%m/%d %H:%M%F1995-01-02 08:00:00");
-    h1->GetXaxis()->SetTitle("Date / Time");
-    h1->GetXaxis()->SetLabelSize(0.022);
-    h1->GetYaxis()->SetTitle("(Hz)");
-    h1->Draw("P");
+    for (int i=0;i<60;i++)
+    {
+        h1->SetBinContent(i,h1->GetBinContent(i)/(event_am_tot+event_pm_tot));
+        h2->SetBinContent(i,h2->GetBinContent(i)/(event_am_143+event_pm_143));
+    }
+//    h1->SetMarkerStyle(24);
+//    h1->SetMarkerColorAlpha(1,0.004);
+    h1->GetXaxis()->SetTitle("Volts");
+//    h1->GetXaxis()->SetLabelSize(0.022);
+//    h1->GetYaxis()->SetTitle("Fraction of events");
+    //h1->SetMaximum(1200);
+    h2->SetLineColor(kBlack);
+    h1->SetStats(false);
+//    h1->Draw();
+    //h2->SetMaximum(1200);
+    h2->SetLineColor(kRed);
+//    h2->Draw("same");
+    TH1F* h3 = new TH1F("h3","adsf",length/2,0,length/2);
+    for (int k=0;k<length;k++)
+        ch1_fft_ave[k]/=(event_am_tot-event_am_143+event_pm_tot-event_pm_143);
+    for (int k=0;k<length;k++)
+        h3->SetBinContent(k,ch1_fft_ave[k]);
+    h3->GetXaxis()->SetRange(100,320);
+    h3->Draw();
     c1->cd(2);
     TGraph* gr1 = new TGraph(num_tot,time_sto,ch1_fft_143);
     gr1->SetTitle("141~145 MHz Peak Magnitude -- Time");
@@ -165,6 +197,5 @@ int Read()
     gr2->GetXaxis()->SetTitle("Date / Time");
     gr2->GetXaxis()->SetLabelSize(0.022);
     gr2->Draw("P");
-    c1->Update();
     c1->Update();
 }

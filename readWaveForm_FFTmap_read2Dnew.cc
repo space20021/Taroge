@@ -38,16 +38,15 @@ int Read()
     bool chk;
     
     TChain* chain = new TChain("t1");
-    for (int i=10;i<=59;i++) //10~59
+    for (int i=14;i<=38;i++) //14~38
     {
-        sprintf(root_file,"/Users/judi/Desktop/Taroge_Root/r57_%d.root",i);
+        sprintf(root_file,"/Users/judi/Desktop/Taroge_Root/r59_%d.root",i);
         chain->Add(root_file);
     }
-    num_tot=chain->GetEntries(); //250050
+    num_tot=chain->GetEntries(); //125025
     chain->SetBranchAddress("time",&time);
     chain->SetBranchAddress("ch1_fft[1]",&ch1_fft);
     
-    TFile *f1 = new TFile("Forced_Trigger_spectra.root","recreate");
     TCanvas* c1 = new TCanvas("c1","canvas",1600,1200);
     //c1->Divide(1,2);
     //c1->cd(1);
@@ -55,11 +54,11 @@ int Read()
     //////////////////////////
     //Start editing from here
     ////////////
-    time_start=1427470111;
+    time_start=1427732938;
     event_rate_bin=0;
     for (int k=0;k<500;k++)
         ch1_fft_ave[k]=0;
-    TH2F* h1 = new TH2F("h1","Time variation of spectra (dBm)",2987,1427470111,1427649389,500,0,500); //179278
+    TH2F* h1 = new TH2F("h1","Time variation of spectra (dBm)",1399,1427732938,1427816883,500,0,500); //
     for (int i=0;i<num_tot;i++)
     {
         chain->GetEntry(i);
@@ -86,7 +85,7 @@ int Read()
                 for (int k=0;k<500;k++)
                 {
                     ch1_fft_ave[k]/=event_rate_bin;
-                    h1->SetBinContent(time_ind,k,ch1_fft_ave[k]+30);
+                    h1->SetBinContent(time_ind,k,ch1_fft_ave[k]);
                 }
             }
             time_ind++;
@@ -106,10 +105,8 @@ int Read()
     h1->GetXaxis()->SetLabelSize(0.022);
     h1->GetYaxis()->SetTitle("Frequency (MHz)");
     h1->GetYaxis()->SetRange(100,320);
-    h1->GetZaxis()->SetRangeUser(-75, -25);
+    h1->GetZaxis()->SetRangeUser(-55, -20);
     h1->SetStats(false);
     h1->Draw("colz");
     c1->Update();
-    //h1->Write();
-    //f1->Close();
 }

@@ -45,7 +45,7 @@ long TimeAdd(long time_now, int inc)
 int Read()
 {
     const int length=1000;
-    double ch1[length], ch1_fft[length], ch1_fft_143[3000000], max_ele, ch1_fft_143_red[1000000], ch1_fft_ave[length];
+    double ch1[length], ch1_fft[length], ch1_fft_143[3000000], max_ele, ch1_fft_143_red[1000000];
     int max_ind, red_ind=0;
     int event_rate[3000000];
     int num_tot;
@@ -58,16 +58,13 @@ int Read()
     int event_am_143=0, event_am_tot=0;
     int event_pm_143=0, event_pm_tot=0;
     
-    for (int k=0;k<length;k++)
-        ch1_fft_ave[k]=0.;
-    
     TChain* chain = new TChain("t1");
-    for (int i=14;i<=38;i++) //14~87 (but after 38 it becomes weird)
+    for (int i=801;i<=994;i++) //801~994
     {
-        sprintf(root_file,"/Users/judi/Desktop/Taroge_Root/r59_%d.root",i);
+        sprintf(root_file,"/Users/judi/Desktop/Taroge_Root/r21_%d.root",i);
         chain->Add(root_file);
     }
-    num_tot=chain->GetEntries(); //125025
+    num_tot=chain->GetEntries(); //970194
     chain->SetBranchAddress("time",&time);
     chain->SetBranchAddress("ch1[1]",&ch1);
     chain->SetBranchAddress("ch1_fft[1]",&ch1_fft);
@@ -89,7 +86,7 @@ int Read()
         time=time%100;
         time_raw.Set(115,3,time_mday,time_hour,time_min,time);
         time_sto[i]=time_raw.Convert();
-        //printf("%10f\n",time_sto[i]);
+        printf("%10f\n",time_sto[i]);
         max_ele=TMath::Abs(ch1[0]);
         //cout << TMath::Abs(ch1[0]) << " ";
         for (int k=1;k<length;k++)
@@ -144,11 +141,6 @@ int Read()
                 red_ind++;
             }
         }
-        if (chk==0)
-        {
-            for (int k=0;k<length;k++)
-                ch1_fft_ave[k]+=ch1_fft[k];
-        }
         if (i%100000==0)
             cout << "Reading the " << i << " th event...\n"; //Just to track progress
     }
@@ -170,17 +162,10 @@ int Read()
     //h1->SetMaximum(1200);
     h2->SetLineColor(kBlack);
     h1->SetStats(false);
-//    h1->Draw();
+    h1->Draw();
     //h2->SetMaximum(1200);
     h2->SetLineColor(kRed);
-//    h2->Draw("same");
-    TH1F* h3 = new TH1F("h3","adsf",length/2,0,length/2);
-    for (int k=0;k<length;k++)
-        ch1_fft_ave[k]/=(event_am_tot-event_am_143+event_pm_tot-event_pm_143);
-    for (int k=0;k<length;k++)
-        h3->SetBinContent(k,ch1_fft_ave[k]);
-    h3->GetXaxis()->SetRange(100,320);
-    h3->Draw();
+    h2->Draw("same");
     c1->cd(2);
     TGraph* gr1 = new TGraph(num_tot,time_sto,ch1_fft_143);
     gr1->SetTitle("141~145 MHz Peak Magnitude -- Time");
@@ -188,7 +173,7 @@ int Read()
 //    gr1->SetMarkerSize(0.08);
     gr1->GetXaxis()->SetTimeDisplay(1);
     gr1->GetXaxis()->SetTimeFormat("%m/%d %H:%M%F1995-01-02 08:00:00");
-    gr1->GetXaxis()->SetLimits(1427732938,1427816883);
+    gr1->GetXaxis()->SetLimits(1426608366,1426781081);
     gr1->GetXaxis()->SetTitle("Date / Time");
     gr1->GetXaxis()->SetLabelSize(0.015);
     gr1->GetYaxis()->SetTitle("Power (dBm)");
@@ -198,7 +183,7 @@ int Read()
     gr2->SetMarkerColor(2);
     gr2->GetXaxis()->SetTimeDisplay(1);
     gr2->GetXaxis()->SetTimeFormat("%m/%d %H:%M%F1995-01-02 08:00:00");
-    gr2->GetXaxis()->SetLimits(1427732938,1427816883);
+    gr2->GetXaxis()->SetLimits(1426608366,1426781081);
     gr2->GetXaxis()->SetTitle("Date / Time");
     gr2->GetXaxis()->SetLabelSize(0.015);
     gr2->Draw("P");
